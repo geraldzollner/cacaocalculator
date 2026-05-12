@@ -81,7 +81,7 @@
       <div class="slider-row"><label>Cacao purchase price (€/kg)</label><input type="range" id="purchase" min="5" max="40" step="1" value="20"><span class="val" id="o-purchase">€20</span></div>
       <div class="slider-row"><label>Packaging cost (€/kg)</label><input type="range" id="packaging" min="0" max="15" step="0.5" value="4.5"><span class="val" id="o-packaging">€4.50</span></div>
       <div class="slider-row"><label>Delivery cost (€/kg)</label><input type="range" id="delivery" min="0" max="30" step="0.5" value="7"><span class="val" id="o-delivery">€7.00</span></div>
-      <div class="slider-row"><label>SM salary (€/yr, for tax bracket)</label><input type="range" id="salary" min="0" max="100000" step="1000" value="45000"><span class="val" id="o-salary">€45 000</span></div>
+      <div class="slider-row"><label id="lbl-salary">Other Income / Salary (€/yr, for tax bracket)</label><input type="range" id="salary" min="0" max="100000" step="1000" value="0"><span class="val" id="o-salary">€0</span></div>
     </div>
 
     <hr>
@@ -266,7 +266,8 @@ function calc() {
   fe('o-purchase').textContent  = '€' + purchase;
   fe('o-packaging').textContent = '€' + packaging.toFixed(2);
   fe('o-delivery').textContent  = '€' + delivery.toFixed(2);
-  fe('o-salary').textContent    = salary > 0 ? '€' + salary.toLocaleString('de-AT') : '€0';
+  fe('lbl-salary').textContent  = isM ? 'Other Income / Salary (€/mo, for tax bracket)' : 'Other Income / Salary (€/yr, for tax bracket)';
+  fe('o-salary').textContent    = salary > 0 ? '€' + (isM ? (salary/12).toLocaleString('de-AT', {maximumFractionDigits:0}) : salary.toLocaleString('de-AT')) : '€0';
   fe('lbl-kg-slider').textContent = isM ? 'kg sold per month' : 'kg sold per year';
   fe('o-kg').textContent = isM ? (kgYear/12).toFixed(1) + ' kg' : kgYear.toLocaleString('de-AT') + ' kg';
 
