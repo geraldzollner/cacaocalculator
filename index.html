@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cacao Business Profit Calculator</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f9f9f8; color: #1a1a1a; margin: 0; padding: 24px 16px; }
+    .page { max-width: 680px; margin: 0 auto; background: #fff; border-radius: 12px; padding: 24px 28px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+    h1 { font-size: 17px; font-weight: 600; margin: 0 0 1.25rem; color: #1a1a1a; }
+
+    .wrap { padding: 0; font-size: 14px; }
+    .section-label { font-size: 11px; font-weight: 500; color: #666; letter-spacing: 0.07em; text-transform: uppercase; margin: 1.2rem 0 0.7rem; }
+    .slider-row { display: flex; align-items: center; gap: 10px; margin-bottom: 0.75rem; }
+    .slider-row label { font-size: 13px; color: #1a1a1a; flex: 1; }
+    .slider-row input[type=range] { width: 200px; flex-shrink: 0; accent-color: #3B6D11; }
+    .slider-row .val { font-size: 13px; font-weight: 500; color: #1a1a1a; min-width: 80px; text-align: right; }
+    .input-row { display: flex; align-items: center; gap: 10px; margin-bottom: 0.65rem; }
+    .input-row label { font-size: 13px; color: #1a1a1a; flex: 1; }
+    .input-row input[type=number] { width: 90px; text-align: right; font-size: 13px; padding: 4px 8px; border: 0.5px solid #d0d0d0; border-radius: 6px; background: #fff; color: #1a1a1a; outline: none; }
+    .input-row input[type=number]:focus { border-color: #3B6D11; }
+    .input-row .unit { font-size: 13px; color: #666; width: 28px; }
+    .input-row .perkg { font-size: 12px; color: #666; min-width: 80px; text-align: right; }
+    .input-row.muted label { color: #888; }
+    .input-row.muted input { background: #f5f5f5; color: #888; }
+    .ship-note { font-size: 11px; color: #888; margin: -4px 0 10px 0; line-height: 1.5; padding-left: 2px; }
+    .ship-total { display: flex; justify-content: space-between; align-items: center; padding: 8px 4px; border-top: 1px solid #e0e0e0; margin-top: 4px; font-size: 13px; }
+    .ship-total .label { font-weight: 500; }
+    .ship-total .values { display: flex; gap: 16px; font-weight: 500; }
+    .options { margin: 0.5rem 0 1rem; display: flex; flex-direction: column; gap: 8px; }
+    .options label { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #1a1a1a; cursor: pointer; }
+    .cards { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; margin: 1.25rem 0; }
+    .card { background: #f5f5f4; border-radius: 10px; padding: 1rem 1.1rem; }
+    .card-label { font-size: 13px; color: #666; margin-bottom: 4px; }
+    .card-value { font-size: 26px; font-weight: 500; color: #1a1a1a; }
+    .card-value.pos { color: #3B6D11; }
+    .card-value.neg { color: #A32D2D; }
+    .card-sub { font-size: 12px; color: #888; margin-top: 2px; }
+    .bk-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 0.5rem; }
+    .bk-table td { padding: 8px 4px; border-bottom: 0.5px solid #eee; color: #1a1a1a; }
+    .bk-table tr:last-child td { border-bottom: none; }
+    .bk-table .val-col { text-align: right; font-weight: 500; white-space: nowrap; }
+    .bk-table .top-border td { border-top: 1px solid #d8d8d8; padding-top: 10px; }
+    .tax-note { font-size: 12px; color: #888; margin: 0.6rem 0; line-height: 1.6; }
+    .footer-note { font-size: 12px; color: #888; border-top: 0.5px solid #eee; padding-top: 0.75rem; margin-top: 0.75rem; line-height: 1.6; }
+    .top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.25rem; }
+    .toggle-group { display: flex; border: 0.5px solid #d0d0d0; border-radius: 6px; overflow: hidden; }
+    .tbtn { padding: 5px 16px; font-size: 12px; background: none; border: none; cursor: pointer; color: #666; }
+    .tbtn.active { background: #eaf3fb; color: #185FA5; font-weight: 500; }
+    hr { border: none; border-top: 0.5px solid #eee; margin: 1rem 0; }
+    .note-inline { font-size: 11px; color: #888; margin-left: 4px; }
+    .tag { font-size: 10px; padding: 1px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
+    .tag-included { background: #EAF3DE; color: #3B6D11; }
+    .tag-optional { background: #FAEEDA; color: #854F0B; }
+    .tag-separate { background: #E6F1FB; color: #185FA5; }
+
+    @media (max-width: 520px) {
+      .cards { grid-template-columns: 1fr; }
+      .slider-row { flex-wrap: wrap; }
+      .slider-row input[type=range] { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+  <h1>Cacao Business Profit Calculator</h1>
+
+  <div class="wrap">
+    <div class="top-bar">
+      <div class="section-label" style="margin:0">Key inputs</div>
+      <div class="toggle-group">
+        <button class="tbtn active" id="btn-y" onclick="setView('y')">Yearly</button>
+        <button class="tbtn" id="btn-m" onclick="setView('m')">Monthly</button>
+      </div>
+    </div>
+
+    <div style="margin-top:0.75rem">
+      <div class="slider-row"><label>Selling price (€/kg)</label><input type="range" id="price" min="40" max="160" step="1" value="80"><span class="val" id="o-price">€80</span></div>
+      <div class="slider-row"><label id="lbl-kg-slider">kg sold per year</label><input type="range" id="kg" min="10" max="2000" step="10" value="300"><span class="val" id="o-kg">300 kg</span></div>
+      <div class="slider-row"><label>Cacao purchase price (€/kg)</label><input type="range" id="purchase" min="5" max="40" step="1" value="20"><span class="val" id="o-purchase">€20</span></div>
+      <div class="slider-row"><label>Packaging cost (€/kg)</label><input type="range" id="packaging" min="0" max="15" step="0.5" value="4.5"><span class="val" id="o-packaging">€4.50</span></div>
+      <div class="slider-row"><label>Delivery cost (€/kg)</label><input type="range" id="delivery" min="0" max="30" step="0.5" value="7"><span class="val" id="o-delivery">€7.00</span></div>
+      <div class="slider-row"><label>SM salary (€/yr, for tax bracket)</label><input type="range" id="salary" min="0" max="100000" step="1000" value="45000"><span class="val" id="o-salary">€45 000</span></div>
+    </div>
+
+    <hr>
+    <div class="section-label">Shipment costs <span class="note-inline">— per shipment ÷ kg per shipment = cost/kg</span></div>
+    <div class="ship-note">Based on K+N quote APLIM260420A00501 (DAP Linz, 100kg air). All USD converted at 0.92.</div>
+
+    <div class="input-row">
+      <label>Kg per shipment</label>
+      <input type="number" id="ship-kg" value="100" min="1" step="1">
+      <span class="unit">kg</span>
+      <span class="perkg"></span>
+    </div>
+
+    <div class="input-row">
+      <label>Chazuta → Lima (local truck) <span class="tag tag-separate">separate</span></label>
+      <input type="number" id="ship-chazuta" value="50" min="0" step="1">
+      <span class="unit">€</span>
+      <span class="perkg" id="pk-chazuta"></span>
+    </div>
+
+    <div class="input-row">
+      <label>Lima address → airport (trucking) <span class="tag tag-separate">separate ~$200</span></label>
+      <input type="number" id="ship-lima" value="184" min="0" step="1">
+      <span class="unit">€</span>
+      <span class="perkg" id="pk-lima"></span>
+    </div>
+
+    <div class="input-row">
+      <label>K+N freight quote (all-in, DAP Linz) <span class="tag tag-included">incl. origin + dest handling + delivery</span></label>
+      <input type="number" id="ship-freight" value="1077" min="0" step="1">
+      <span class="unit">€</span>
+      <span class="perkg" id="pk-freight"></span>
+    </div>
+    <div class="ship-note" style="margin-top:-2px">Covers: origin handling €46, air freight €782, manifest €32, destination handling €79+$26+$17, door delivery €96. AT broker/customs included in DAP.</div>
+
+    <div class="input-row">
+      <label>Insurance (Tasa Gestión Seguro) <span class="tag tag-optional">optional</span></label>
+      <input type="number" id="ship-insurance" value="20" min="0" step="1">
+      <span class="unit">€</span>
+      <span class="perkg" id="pk-insurance"></span>
+    </div>
+
+    <div class="input-row">
+      <label>Export customs — Despacho Aduana <span class="tag tag-optional">optional</span></label>
+      <input type="number" id="ship-exportcustoms" value="138" min="0" step="1">
+      <span class="unit">€</span>
+      <span class="perkg" id="pk-exportcustoms"></span>
+    </div>
+
+    <div class="input-row muted">
+      <label>AT broker <span class="note-inline">included in DAP Linz rate above</span></label>
+      <input type="number" value="0" readonly>
+      <span class="unit">€</span>
+      <span class="perkg" style="color:#888">€0.00/kg</span>
+    </div>
+
+    <div class="input-row">
+      <label>Import duty <span class="note-inline" id="gsp-note">(GSP: 0%)</span></label>
+      <input type="number" id="ship-duty" value="0" min="0" step="1">
+      <span class="unit">€</span>
+      <span class="perkg" id="pk-duty"></span>
+    </div>
+
+    <div class="input-row muted">
+      <label>Import VAT (20% of customs value) <span class="note-inline">auto — not reclaimable as Kleinunternehmer</span></label>
+      <input type="number" id="ship-vat" value="0" readonly>
+      <span class="unit">€</span>
+      <span class="perkg" id="pk-vat"></span>
+    </div>
+
+    <div class="options" style="margin-top:0.75rem">
+      <label><input type="checkbox" id="gsp" checked onchange="toggleGSP()"> GSP 0% EU import duty (uncheck for 9.6% worst case)</label>
+    </div>
+
+    <div class="ship-total">
+      <span class="label">Total shipping cost</span>
+      <span class="values"><span id="ship-total-perkg">—/kg</span><span id="ship-total-shipment">— /shipment</span></span>
+    </div>
+
+    <hr>
+    <div class="section-label">Other options</div>
+    <div class="options">
+      <label><input type="checkbox" id="overhead"> Include annual overheads: Steuerberater + WKO + phytosanitary (~€1,200/yr)</label>
+    </div>
+
+    <hr>
+
+    <div class="cards">
+      <div class="card">
+        <div class="card-label" id="lbl-rev">Revenue</div>
+        <div class="card-value pos" id="c-rev">—</div>
+        <div class="card-sub" id="c-rev-sub">—</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Take-home / kg</div>
+        <div class="card-value" id="c-perkg">—</div>
+        <div class="card-sub">after all taxes</div>
+      </div>
+      <div class="card">
+        <div class="card-label" id="lbl-annual">Annual take-home</div>
+        <div class="card-value" id="c-annual">—</div>
+        <div class="card-sub" id="c-annual-sub">net profit</div>
+      </div>
+    </div>
+
+    <hr>
+
+    <div class="section-label" id="lbl-bk">Per kg breakdown</div>
+    <table class="bk-table">
+      <tbody id="bk-body"></tbody>
+    </table>
+    <div class="tax-note" id="tax-note"></div>
+    <div class="footer-note" id="footer-note"></div>
+  </div>
+</div>
+
+<script>
+let view = 'y';
+
+function setView(v) {
+  view = v;
+  document.getElementById('btn-y').className = 'tbtn' + (v==='y' ? ' active' : '');
+  document.getElementById('btn-m').className = 'tbtn' + (v==='m' ? ' active' : '');
+  calc();
+}
+
+function fe(id) { return document.getElementById(id); }
+function num(id) { return parseFloat(fe(id).value) || 0; }
+
+function fmtKg(n) {
+  return '€' + Math.abs(n).toLocaleString('de-AT', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+function fmtTotal(n) {
+  const abs = Math.abs(n);
+  return '€' + (abs >= 1000 ? Math.round(abs).toLocaleString('de-AT') : abs.toFixed(0));
+}
+
+function calcTax(income) {
+  if (income <= 0) return 0;
+  const brackets = [[12816,0],[20818,.20],[34513,.30],[66612,.40],[99266,.48],[1000000,.50],[Infinity,.55]];
+  let tax = 0, prev = 0;
+  for (const [top, rate] of brackets) {
+    if (income <= prev) break;
+    tax += (Math.min(income, top) - prev) * rate;
+    prev = top;
+  }
+  return tax;
+}
+
+function bkRow(label, kgVal, totalVal, opts) {
+  opts = opts || {};
+  const labelStyle = opts.bold ? ' style="font-weight:500"' : '';
+  const valStyle = opts.color ? ` style="color:${opts.color};font-weight:${opts.bold?'500':'400'}"` : (opts.bold ? ' style="font-weight:500"' : '');
+  const trClass = opts.topBorder ? 'top-border' : '';
+  const kgStr = kgVal !== null ? ((kgVal < 0 ? '−' : '') + fmtKg(kgVal)) : '';
+  const totStr = totalVal !== null ? ((totalVal < 0 ? '−' : '') + fmtTotal(totalVal)) : '';
+  return `<tr class="${trClass}"><td${labelStyle}>${label}</td><td class="val-col"${valStyle}>${kgStr}</td><td class="val-col"${valStyle}>${totStr}</td></tr>`;
+}
+
+function toggleGSP() {
+  const gsp = fe('gsp').checked;
+  const purchaseVal = num('purchase');
+  const shipKg = num('ship-kg') || 1;
+  fe('gsp-note').textContent = gsp ? '(GSP: 0%)' : '(standard: 9.6%)';
+  fe('ship-duty').value = gsp ? 0 : Math.round(purchaseVal * shipKg * 0.096);
+  calc();
+}
+
+function calc() {
+  const price     = num('price');
+  const kgYear    = num('kg');
+  const purchase  = num('purchase');
+  const packaging = num('packaging');
+  const delivery  = num('delivery');
+  const salary    = num('salary');
+  const gsp       = fe('gsp').checked;
+  const overhead  = fe('overhead').checked;
+  const isM       = view === 'm';
+  const M         = isM ? 1/12 : 1;
+
+  fe('o-price').textContent     = '€' + price;
+  fe('o-purchase').textContent  = '€' + purchase;
+  fe('o-packaging').textContent = '€' + packaging.toFixed(2);
+  fe('o-delivery').textContent  = '€' + delivery.toFixed(2);
+  fe('o-salary').textContent    = salary > 0 ? '€' + salary.toLocaleString('de-AT') : '€0';
+  fe('lbl-kg-slider').textContent = isM ? 'kg sold per month' : 'kg sold per year';
+  fe('o-kg').textContent = isM ? (kgYear/12).toFixed(1) + ' kg' : kgYear.toLocaleString('de-AT') + ' kg';
+
+  const shipKg       = num('ship-kg') || 1;
+  const sChazuta     = num('ship-chazuta');
+  const sLima        = num('ship-lima');
+  const sFreight     = num('ship-freight');
+  const sInsurance   = num('ship-insurance');
+  const sExport      = num('ship-exportcustoms');
+  const sDuty        = num('ship-duty');
+
+  const customsValue = (purchase * shipKg) + sFreight + sDuty;
+  const sVAT = customsValue * 0.20;
+  fe('ship-vat').value = Math.round(sVAT);
+
+  const shipmentTotal = sChazuta + sLima + sFreight + sInsurance + sExport + sDuty + sVAT;
+  const shippingPerKg = shipmentTotal / shipKg;
+
+  const ids = ['chazuta','lima','freight','insurance','exportcustoms','duty'];
+  const vals = [sChazuta, sLima, sFreight, sInsurance, sExport, sDuty];
+  ids.forEach((id, i) => {
+    fe('pk-' + id).textContent = '= ' + fmtKg(vals[i] / shipKg) + '/kg';
+  });
+  fe('pk-vat').textContent = '= ' + fmtKg(sVAT / shipKg) + '/kg';
+
+  fe('ship-total-perkg').textContent    = fmtKg(shippingPerKg) + '/kg';
+  fe('ship-total-shipment').textContent = fmtTotal(shipmentTotal) + '/shipment';
+  fe('gsp-note').textContent = gsp ? '(GSP: 0%)' : '(standard: 9.6%)';
+
+  const overheadTotal  = overhead ? 1200 : 0;
+  const overheadPerKg  = overheadTotal / kgYear;
+
+  const revTotal       = price * kgYear;
+  const purchaseTotal  = purchase * kgYear;
+  const packagingTotal = packaging * kgYear;
+  const deliveryTotal  = delivery * kgYear;
+  const shippingTotal  = shippingPerKg * kgYear;
+
+  const grossProfitPerKg = price - purchase - shippingPerKg - packaging - delivery - overheadPerKg;
+  const grossProfitTotal = grossProfitPerKg * kgYear;
+
+  const svsTotal     = grossProfitTotal > 0 ? Math.max(1930, grossProfitTotal * 0.2683) : 0;
+  const svsPerKg     = svsTotal / kgYear;
+  const gwf          = Math.max(0, (grossProfitTotal - svsTotal) * 0.15);
+  const cacaoTaxable = Math.max(0, grossProfitTotal - svsTotal - gwf);
+
+  const taxOnSalary         = calcTax(salary);
+  const taxOnSalaryAndCacao = calcTax(salary + cacaoTaxable);
+  const incomeTaxTotal      = Math.max(0, taxOnSalaryAndCacao - taxOnSalary);
+  const incomeTaxPerKg      = incomeTaxTotal / kgYear;
+
+  const takehomePerKg = grossProfitPerKg - svsPerKg - incomeTaxPerKg;
+  const takehomeTotal = takehomePerKg * kgYear;
+
+  fe('lbl-rev').textContent      = isM ? 'Revenue / month' : 'Revenue';
+  fe('lbl-annual').textContent   = isM ? 'Monthly take-home' : 'Annual take-home';
+  fe('c-rev').textContent        = (isM ? '≈' : '') + fmtTotal(revTotal * M);
+  fe('c-rev-sub').textContent    = (isM ? (kgYear/12).toFixed(1) : kgYear.toLocaleString('de-AT')) + ' kg sold';
+  fe('c-perkg').textContent      = (takehomePerKg >= 0 ? '' : '−') + fmtKg(takehomePerKg);
+  fe('c-perkg').className        = 'card-value ' + (takehomePerKg >= 0 ? 'pos' : 'neg');
+  fe('c-annual').textContent     = (takehomeTotal >= 0 ? '' : '−') + fmtTotal(Math.abs(takehomeTotal) * M);
+  fe('c-annual').className       = 'card-value ' + (takehomeTotal >= 0 ? 'pos' : 'neg');
+  fe('c-annual-sub').textContent = isM ? 'net profit / month' : 'net profit';
+
+  fe('lbl-bk').textContent = isM ? 'Per kg breakdown (totals = monthly)' : 'Per kg breakdown';
+  let rows = '';
+  rows += `<tr><td></td><td class="val-col" style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:0.04em">Per kg</td><td class="val-col" style="font-size:11px;color:#888;text-transform:uppercase;letter-spacing:0.04em">${isM ? 'Per month' : 'Per year'}</td></tr>`;
+  rows += bkRow('Selling price',               price,           revTotal * M,        {color:'#3B6D11'});
+  rows += bkRow('Cacao purchase',              -purchase,       -purchaseTotal * M);
+  rows += bkRow('Shipping + customs + broker', -shippingPerKg,  -shippingTotal * M);
+  rows += bkRow('Packaging',                   -packaging,      -packagingTotal * M);
+  rows += bkRow('Delivery to customers',       -delivery,       -deliveryTotal * M);
+  if (overhead) {
+    rows += bkRow('Overheads / kg',            -overheadPerKg,  -overheadTotal * M);
+  }
+  rows += bkRow('Gross profit / kg', grossProfitPerKg, grossProfitTotal * M, {bold:true, topBorder:true, color: grossProfitPerKg>=0?'#3B6D11':'#A32D2D'});
+  rows += bkRow('SVS (social insurance) / kg', -svsPerKg,       -svsTotal * M);
+  rows += bkRow('Income tax / kg',             -incomeTaxPerKg, -incomeTaxTotal * M);
+  rows += bkRow('Take-home / kg', takehomePerKg, takehomeTotal * M, {bold:true, topBorder:true, color: takehomePerKg>=0?'#3B6D11':'#A32D2D'});
+
+  fe('bk-body').innerHTML = rows;
+
+  const bracketIncome = salary + Math.max(0, grossProfitTotal - svsTotal);
+  const topBracket = bracketIncome > 66612 ? 48 : bracketIncome > 34513 ? 40 : bracketIncome > 20818 ? 30 : bracketIncome > 12816 ? 20 : 0;
+  fe('tax-note').textContent = `Marginal tax rate: ${topBracket}% — cacao profit stacks on €${salary.toLocaleString('de-AT')} SM salary. Gewinnfreibetrag (15%) applied before tax.`;
+  fe('footer-note').textContent = `K+N quote APLIM260420A00501 (expired 22.04.2026, indicative only). DAP Linz includes origin handling, air freight, manifest, destination handling, gateway fee, and door delivery — AT broker/customs clearance included. USD converted at 0.92. Import VAT (20%) on customs value of €${Math.round(customsValue).toLocaleString('de-AT')} = €${Math.round(sVAT).toLocaleString('de-AT')} per shipment — not reclaimable as Kleinunternehmer. ${gsp ? 'GSP 0% duty applied.' : '9.6% standard duty applied to purchase value.'}`;
+}
+
+['price','kg','purchase','packaging','delivery','salary'].forEach(id => {
+  fe(id).addEventListener('input', calc);
+});
+['overhead'].forEach(id => {
+  fe(id).addEventListener('change', calc);
+});
+['ship-kg','ship-chazuta','ship-lima','ship-freight','ship-insurance','ship-exportcustoms','ship-duty'].forEach(id => {
+  fe(id).addEventListener('input', calc);
+});
+
+calc();
+</script>
+</body>
+</html>
